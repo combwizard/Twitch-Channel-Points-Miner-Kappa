@@ -395,7 +395,7 @@ class Twitch(object):
 
                     elif (
                         prior in [Priority.POINTS_ASCENDING,
-                                  Priority.POINTS_DESCEDING]
+                                  Priority.POINTS_DESCENDING]
                         and len(streamers_watching) < 2
                     ):
                         items = [
@@ -407,7 +407,7 @@ class Twitch(object):
                             items,
                             key=lambda x: x["points"],
                             reverse=(
-                                True if prior == Priority.POINTS_DESCEDING else False
+                                True if prior == Priority.POINTS_DESCENDING else False
                             ),
                         )
                         streamers_watching += [item["index"]
