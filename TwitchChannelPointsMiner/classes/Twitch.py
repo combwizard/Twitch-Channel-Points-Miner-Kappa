@@ -79,7 +79,7 @@ class Twitch(object):
         self.client_session = token_hex(16)
         self.client_version = CLIENT_VERSION
         self.twilight_build_id_pattern = re.compile(
-            r"window\.__twilightBuildID=\"([0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12})\";"
+            r'window\.__twilightBuildID\s*=\s*"([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})"'
         )
 
     def login(self):
