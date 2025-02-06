@@ -62,6 +62,14 @@ class ColorPalette(object):
         color = getattr(self, str(key)) if str(key) in dir(self) else None
         return Fore.RESET if color is None else color
 
+class Color256Palette:
+    red = "\033[38;5;196m"
+    gray = "\033[38;5;8m"
+    cyan = "\033[38;5;14m"
+    reset = "\033[38;5;254m"
+    purple = "\033[38;5;91m"
+    yellow = "\033[38;5;226m"
+    green = "\033[38;5;46m"
 
 class LoggerSettings:
     __slots__ = [
@@ -81,7 +89,8 @@ class LoggerSettings:
         "matrix",
         "pushover",
         "gotify",
-        "username"
+        "username",
+        "smart"
     ]
 
     def __init__(
@@ -102,7 +111,8 @@ class LoggerSettings:
         matrix: Matrix or None = None,
         pushover: Pushover or None = None,
         gotify: Gotify or None = None,
-        username: str or None = None
+        username: str or None = None,
+        smart: bool = False,
     ):
         self.save = save
         self.less = less
@@ -121,6 +131,7 @@ class LoggerSettings:
         self.pushover = pushover
         self.gotify = gotify
         self.username = username
+        self.smart = smart
 
 
 class FileFormatter(logging.Formatter):
@@ -176,7 +187,7 @@ class GlobalFormatter(logging.Formatter):
             and record.emoji_is_present is False
         ):
             record.msg = emoji.emojize(
-                f"{record.emoji}  {record.msg.strip()}", language="alias"
+                f"{record.emoji} {record.msg.strip()}", language="alias"
             )
             record.emoji_is_present = True
 
@@ -300,12 +311,12 @@ def configure_loggers(username, settings):
     console_handler.setFormatter(
         GlobalFormatter(
             fmt=(
-                "%(asctime)s - %(levelname)s - [%(funcName)s]: %(message)s"
+                f"[%(levelname)s] %(asctime)s: {'[%(funcName)s]: ' if not settings.smart else ''}%(message)s"
                 if settings.less is False
                 else "%(asctime)s - %(message)s"
             ),
             datefmt=(
-                "%d/%m/%y %H:%M:%S" if settings.less is False else "%d/%m %H:%M:%S"
+                f"{Fore.LIGHTBLACK_EX if settings.smart else ''}%H:%M:%S %d/%m/%y{Fore.RESET if settings.smart else ''}" if settings.less is False else "%H:%M:%S %d/%m"
             ),
             settings=settings,
         )

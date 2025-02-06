@@ -88,7 +88,7 @@ class TwitchChannelPointsMiner:
     ):
         # Fixes TypeError: 'NoneType' object is not subscriptable
         if not username or username == "your-twitch-username":
-            logger.error("Please edit your runner file (usually run.py) and try again.")
+            logger.error("Please edit config.json file and try again.")
             logger.error("No username, exiting...")
             sys.exit(0)
 
@@ -161,9 +161,9 @@ class TwitchChannelPointsMiner:
         current_version, github_version = check_versions()
 
         logger.info(
-            f"Twitch Channel Points Miner v2-{current_version} (fork by rdavydov)"
+            f"Twitch Channel Points Miner v2-{current_version} (fork by 0x8fv)"
         )
-        logger.info("https://github.com/rdavydov/Twitch-Channel-Points-Miner-v2")
+        logger.info("https://github.com/0x8fv/Twitch-Channel-Points-Miner-v2")
 
         if github_version == "0.0.0":
             logger.error(
@@ -172,6 +172,8 @@ class TwitchChannelPointsMiner:
         elif current_version != github_version:
             logger.info(f"You are running version {current_version} of this script")
             logger.info(f"The latest version on GitHub is {github_version}")
+            time.sleep(5)
+            sys.exit(1)
 
         for sign in [signal.SIGINT, signal.SIGSEGV, signal.SIGTERM]:
             signal.signal(sign, self.end)

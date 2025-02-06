@@ -18,6 +18,8 @@ import validators
 from pathlib import Path
 from secrets import choice, token_hex
 from typing import Dict, Any
+from colorama import Fore
+
 # from urllib.parse import quote
 # from base64 import urlsafe_b64decode
 # from datetime import datetime
@@ -25,6 +27,7 @@ from typing import Dict, Any
 from TwitchChannelPointsMiner.classes.entities.Campaign import Campaign
 from TwitchChannelPointsMiner.classes.entities.CommunityGoal import CommunityGoal
 from TwitchChannelPointsMiner.classes.entities.Drop import Drop
+from TwitchChannelPointsMiner.logger import Color256Palette
 from TwitchChannelPointsMiner.classes.Exceptions import (
     StreamerDoesNotExistException,
     StreamerIsOfflineException,
@@ -774,7 +777,7 @@ class Twitch(object):
     def claim_bonus(self, streamer, claim_id):
         if Settings.logger.less is False:
             logger.info(
-                f"Claiming the bonus for {streamer}!",
+                f"{streamer} {Color256Palette.green if Settings.logger.smart else ''}Claimed Bonus{Fore.RESET}!",
                 extra={"emoji": ":gift:", "event": Events.BONUS_CLAIM},
             )
 
@@ -788,7 +791,7 @@ class Twitch(object):
     def claim_moment(self, streamer, moment_id):
         if Settings.logger.less is False:
             logger.info(
-                f"Claiming the moment for {streamer}!",
+                f"{streamer} Claimed Moment!",
                 extra={"emoji": ":video_camera:",
                        "event": Events.MOMENT_CLAIM},
             )

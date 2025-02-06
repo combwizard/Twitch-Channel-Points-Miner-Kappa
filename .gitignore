@@ -143,6 +143,8 @@ cython_debug/
 # Custom files
 run.py
 chromedriver*
+/.vscode/settings.json
+config.json
 
 # Folders
 cookies/*
