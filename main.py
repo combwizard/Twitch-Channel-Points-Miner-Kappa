@@ -12,9 +12,14 @@ def set_console_title(title):
 clear_console()
 set_console_title("Klaro's Twitch Miner")
 
-from TwitchChannelPointsMiner import TwitchChannelPointsMiner
-from TwitchChannelPointsMiner.classes.Settings import FollowersOrder
-from TwitchChannelPointsMiner.logger import LoggerSettings
+while True:
+    try:
+        from TwitchChannelPointsMiner import TwitchChannelPointsMiner
+        from TwitchChannelPointsMiner.classes.Settings import FollowersOrder
+        from TwitchChannelPointsMiner.logger import LoggerSettings
+        break
+    except ImportError:
+        os.system("pip install -r requirements.txt")
 
 def load_or_create_config(file_path):
     default_config = {

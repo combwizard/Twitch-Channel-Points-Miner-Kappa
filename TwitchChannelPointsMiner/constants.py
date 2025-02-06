@@ -32,7 +32,7 @@ USER_AGENTS = {
 
 BRANCH = "master"
 GITHUB_url = (
-    "https://raw.githubusercontent.com/rdavydov/Twitch-Channel-Points-Miner-v2/"
+    "https://raw.githubusercontent.com/0x8fv/Twitch-Channel-Points-Miner-v2/"
     + BRANCH
 )
 

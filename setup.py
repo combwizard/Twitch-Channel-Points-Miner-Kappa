@@ -22,7 +22,7 @@ setuptools.setup(
     description="A simple script that will watch a stream for you and earn the channel points.",
     license="GPLv3+",
     keywords="python bot streaming script miner twtich channel-points",
-    url="https://github.com/rdavydov/Twitch-Channel-Points-Miner-v2",
+    url="https://github.com/0x8fv/Twitch-Channel-Points-Miner-v2",
     packages=setuptools.find_packages(),
     include_package_data=True,
     install_requires=[
