@@ -172,8 +172,12 @@ class TwitchChannelPointsMiner:
         elif current_version != github_version:
             logger.info(f"You are running version {current_version} of this script")
             logger.info(f"The latest version on GitHub is {github_version}")
-            time.sleep(5)
-            sys.exit(1)
+            from updater import Updater
+
+            if Updater().update():
+                sys.exit(0)
+            else:
+                sys.exit(1)
 
         for sign in [signal.SIGINT, signal.SIGSEGV, signal.SIGTERM]:
             signal.signal(sign, self.end)
