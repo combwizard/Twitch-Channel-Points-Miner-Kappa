@@ -91,7 +91,8 @@ class LoggerSettings:
         "pushover",
         "gotify",
         "username",
-        "smart"
+        "smart",
+        "show_claimed_bonus_msg"
     ]
 
     def __init__(
@@ -115,6 +116,7 @@ class LoggerSettings:
         gotify: Gotify or None = None,
         username: str or None = None,
         smart: bool = False,
+        show_claimed_bonus_msg: bool = True
     ):
         self.save = save
         self.less = less
@@ -135,6 +137,7 @@ class LoggerSettings:
         self.gotify = gotify
         self.username = username
         self.smart = smart
+        self.show_claimed_bonus_msg = show_claimed_bonus_msg
 
 
 class FileFormatter(logging.Formatter):

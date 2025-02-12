@@ -42,16 +42,17 @@ def load_or_create_config(file_path):
         "disable_ssl_cert_verification": False,
         "save_logs": False,
         "show_username_in_console": False,
+        "show_claimed_bonus_msg": True,
         "streamers": [],
         "bet": {
-            "strategy": "SMART",
-            "percentage": 5,
-            "percentage_gap": 20,
-            "max_points": 50000,
-            "stealth_mode": True,
-            "delay_mode": "FROM_END",
-            "delay": 6,
-            "minimum_points": 20000,
+            "strategy": None,
+            "percentage": None,
+            "percentage_gap": None,
+            "max_points": None,
+            "stealth_mode": None,
+            "delay_mode": None,
+            "delay": None,
+            "minimum_points": None,
         }
     }
 
@@ -103,7 +104,8 @@ def main():
             emoji=config.get("emojis", True),
             smart=config.get("smart_logging", True),
             show_seconds=config.get("show_seconds", False),
-            console_username=config.get("show_username_in_console", False)
+            console_username=config.get("show_username_in_console", False),
+            show_claimed_bonus_msg=config.get("show_claimed_bonus_msg", True)
         )
 
         streamer_settings = StreamerSettings(
@@ -118,12 +120,7 @@ def main():
                 stealth_mode=bet_settings.get("stealth_mode"),
                 delay_mode=newDelayMode,
                 delay=bet_settings.get("delay"),
-                minimum_points=bet_settings.get("minimum_points"),
-                filter_condition=FilterCondition(
-                    by=OutcomeKeys.TOTAL_USERS,
-                    where=Condition.LTE,
-                    value=800
-                )
+                minimum_points=bet_settings.get("minimum_points")
             )
         )
 

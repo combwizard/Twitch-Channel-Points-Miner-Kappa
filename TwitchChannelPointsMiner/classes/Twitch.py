@@ -775,7 +775,7 @@ class Twitch(object):
             )
 
     def claim_bonus(self, streamer, claim_id):
-        if Settings.logger.less is False:
+        if Settings.logger.less is False and Settings.logger.show_claimed_bonus_msg:
             logger.info(
                 f"{streamer} {Color256Palette.green if Settings.logger.smart else ''}Claimed Bonus{Fore.RESET}!",
                 extra={"emoji": ":gift:", "event": Events.BONUS_CLAIM},

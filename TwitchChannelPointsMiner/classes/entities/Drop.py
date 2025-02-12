@@ -92,7 +92,7 @@ class Drop(object):
     def __str__(self):
         return (
             f"{self.name} ({self.benefit}) {self.current_minutes_watched}/{self.minutes_required} ({self.percentage_progress}%)"
-            if Settings.logger.less
+            if Settings.logger.less or Settings.logger.smart
             else self.__repr__()
         )
 

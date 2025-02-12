@@ -161,7 +161,7 @@ class TwitchChannelPointsMiner:
         current_version, github_version = check_versions()
 
         logger.info(
-            f"Twitch Channel Points Miner v2-{current_version} (fork by 0x8fv)"
+            f"Twitch Channel Points Miner v2 | v{current_version} (fork by 0x8fv)"
         )
         logger.info("https://github.com/0x8fv/Twitch-Channel-Points-Miner-v2")
 
@@ -227,7 +227,7 @@ class TwitchChannelPointsMiner:
             logger.error("You can't start multiple sessions of this instance!")
         else:
             logger.info(
-                f"Start session: '{self.session_id}'", extra={"emoji": ":bomb:"}
+                f"Start session: '{self.session_id}'", extra={"emoji": ":green_circle:"}
             )
             self.running = True
             self.start_datetime = datetime.now()
@@ -263,7 +263,7 @@ class TwitchChannelPointsMiner:
 
             logger.info(
                 f"Loading data for {len(streamers_name)} streamers. Please wait...",
-                extra={"emoji": ":nerd_face:"},
+                extra={"emoji": ":hourglass_flowing_sand:"},
             )
             for username in streamers_name:
                 if username in streamers_name:
