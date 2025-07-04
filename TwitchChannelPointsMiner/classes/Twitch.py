@@ -503,7 +503,7 @@ class Twitch(object):
 
                             if 'data' not in responsePlaybackAccessToken:
                                 logger.error(
-                                    f"Invalid response from Twitch: {responsePlaybackAccessToken}")
+                                    f"Invalid response from Twitch: {'(Playback Access Token)' if Settings.logger.smart else responsePlaybackAccessToken}")
                                 continue
 
                             streamPlaybackAccessToken = responsePlaybackAccessToken["data"].get(
