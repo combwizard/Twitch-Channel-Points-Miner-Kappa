@@ -5,10 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: main.py",
-            "type": "debugpy",
+            "name": "Python: run.py",
+            "type": "python",
             "request": "launch",
-            "program": "${cwd}/main${file}.py",
+            "program": "${cwd}/run.py",
             "console": "integratedTerminal",
             "justMyCode": true
         }
