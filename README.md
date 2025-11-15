@@ -18,7 +18,7 @@ This repository is a fork of [rdavydov/Twitch-Channel-Points-Miner-v2](https://g
 
 ## Requirements
 
-- Python 3.10+ (3.12 recommended locally; 3.10 used in Docker)
+- Python 3.12+
 - A Twitch account
 
 ## Quick start
