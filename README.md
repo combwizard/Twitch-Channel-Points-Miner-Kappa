@@ -31,6 +31,9 @@ source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 cp config.example.yaml config.yaml   # edit username and streamers
 python -m TwitchChannelPointsMiner
+
+# Optional: use a config file outside the repo
+CONFIG_PATH=/path/to/config.yaml python -m TwitchChannelPointsMiner
 ```
 
 On first run you will be prompted to log in unless a cookie file already exists in `cookies/`.
@@ -65,11 +68,28 @@ Twitch shut down the legacy PubSub WebSocket API in April 2025. This fork includ
 
 Streamer priority is controlled by the `priority` setting and the order of your streamer list. When using `followers=True`, channels can be sorted by follow date (`FollowersOrder.ASC` or `DESC`). Use `blacklist=[...]` to exclude specific channels from a follower-based list.
 
+When `STREAK` is in your priority list and more than two streamers are live, the miner watches two channels at a time. Once a watched channel finishes its streak window (~7 minutes of watch time), that slot is given to the next online streamer that still needs streak progress instead of staying on a channel that no longer needs it.
+
 ## Configuration reference
 
-Settings can be defined in `config.yaml` (recommended) or in Python when constructing `TwitchChannelPointsMiner`. YAML covers username, streamers, miner options, logger, analytics, and default streamer settings. Bet strategies, notifications, and per-streamer Python objects remain in [`example.py`](example.py).
+Settings can be defined in `config.yaml` (recommended) or in Python when constructing `TwitchChannelPointsMiner`. Bet strategies, notifications, and per-streamer Python objects remain in [`example.py`](example.py).
 
-When using both, Python API settings resolve in this order (highest wins):
+### YAML layout
+
+| Section | Purpose |
+| --- | --- |
+| `username` | Twitch login name (required) |
+| `password` | Optional; omit to use TV device login on first run |
+| `miner` | Hermes, priorities, analytics collection, SSL, `@` matching |
+| `logger` | Console/file logging, rotation, emoji, colors |
+| `streamer_settings` | Defaults applied to every streamer |
+| `analytics` | Optional Flask dashboard (`enabled`, host, port, refresh) |
+| `streamers` | Channel login names to mine (list order matters) |
+| `mine` | Follower list mode, sort order, blacklist |
+
+Example mapping: Python `use_hermes=True` → YAML `miner.use_hermes: true`. Python `Priority.STREAK` → YAML `miner.priority: [streak, drops, order]` (case-insensitive).
+
+When using the Python API alongside YAML, settings resolve in this order (highest wins):
 
 1. Per-streamer settings passed to `mine()`
 2. `StreamerSettings` on the `TwitchChannelPointsMiner` instance
@@ -90,7 +110,7 @@ When using both, Python API settings resolve in this order (highest wins):
 
 | Value | Behavior |
 | --- | --- |
-| `STREAK` | Catch watch-streak bonuses first |
+| `STREAK` | Catch watch-streak bonuses first; frees watch slots when a channel no longer needs streak progress |
 | `DROPS` | Prioritize streamers with active drop campaigns |
 | `SUBSCRIBED` | Prioritize subscribed channels (higher tiers first) |
 | `ORDER` | Follow the streamer list order |
@@ -98,6 +118,14 @@ When using both, Python API settings resolve in this order (highest wins):
 | `POINTS_DESCENDING` | Highest balance first |
 
 Combine priorities as needed. Include at least one of `ORDER`, `POINTS_ASCENDING`, or `POINTS_DESCENDING` so the miner keeps watching after streaks and drops are handled.
+
+### `mine` options (YAML)
+
+| Key | Type | Default | Description |
+| --- | --- | --- | --- |
+| `followers` | bool | `false` | Load your Twitch follow list instead of `streamers` |
+| `followers_order` | str | `asc` | `asc` or `desc` by follow date when `followers` is true |
+| `blacklist` | list | `[]` | Usernames to skip (also applies to the followers list) |
 
 ### StreamerSettings
 
@@ -163,7 +191,7 @@ analytics:
   enabled: true
   host: 127.0.0.1   # use 0.0.0.0 in Docker to reach from the host
   port: 5000
-  refresh: 5
+  refresh_seconds: 5   # dashboard poll interval in seconds
   days_ago: 7
 ```
 
@@ -173,7 +201,7 @@ Alternatively, enable collection and start the server from Python:
 
 ```python
 miner = TwitchChannelPointsMiner("your-twitch-username", enable_analytics=True)
-miner.analytics(host="127.0.0.1", port=5000, refresh=5, days_ago=7)
+miner.analytics(host="127.0.0.1", port=5000, refresh_seconds=5, days_ago=7)
 miner.mine(["streamer1", "streamer2"])
 ```
 
@@ -255,7 +283,7 @@ pip install cryptography
 
 ## Contributing
 
-Issues and pull requests are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a PR.
+Pull requests are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a PR. To report bugs, open an issue on [upstream](https://github.com/rdavydov/Twitch-Channel-Points-Miner-v2/issues) or contact the fork maintainer directly.
 
 To sync with upstream:
 

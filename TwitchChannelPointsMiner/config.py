@@ -90,6 +90,15 @@ def update_streamers_list(path, usernames):
         yaml.dump(cfg, f, default_flow_style=False, sort_keys=False)
 
 
+def _analytics_refresh_seconds(analytics_cfg):
+    if "refresh_seconds" in analytics_cfg:
+        return analytics_cfg["refresh_seconds"]
+    if "refresh" in analytics_cfg:
+        # Legacy key was documented as chart interval in minutes
+        return max(1, int(analytics_cfg["refresh"]) * 60)
+    return 5
+
+
 def run_from_config(path=None):
     path = get_config_path(path)
     cfg = load_config(path)
@@ -126,7 +135,7 @@ def run_from_config(path=None):
             port=analytics_cfg.get("port", 5000),
             days_ago=analytics_cfg.get("days_ago", 7),
             config_path=path,
-            refresh_seconds=analytics_cfg.get("refresh_seconds", 5),
+            refresh_seconds=_analytics_refresh_seconds(analytics_cfg),
         )
 
     mine_cfg = cfg.get("mine", {})

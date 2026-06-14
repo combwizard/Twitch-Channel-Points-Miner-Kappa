@@ -68,8 +68,8 @@ analytics:
   # 127.0.0.1 for local-only; 0.0.0.0 inside Docker to reach from the host
   host: 127.0.0.1
   port: 5000
-  # Chart refresh interval in minutes
-  refresh: 5
+  # Dashboard poll interval in seconds
+  refresh_seconds: 5
   # How many days of history to show (max 5475)
   days_ago: 7
 
