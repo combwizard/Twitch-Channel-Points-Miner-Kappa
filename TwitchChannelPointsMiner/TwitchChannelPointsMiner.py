@@ -402,11 +402,203 @@ class TwitchChannelPointsMiner:
                                 self.streamers[index]
                             )
 
+    def _subscribe_streamer_topics(self, streamer):
+        if self.ws_pool is None:
+            return
+        self.ws_pool.submit(PubsubTopic("video-playback-by-id", streamer=streamer))
+        if streamer.settings.follow_raid is True:
+            self.ws_pool.submit(PubsubTopic("raid", streamer=streamer))
+        if streamer.settings.make_predictions is True:
+            self.ws_pool.submit(
+                PubsubTopic("predictions-channel-v1", streamer=streamer)
+            )
+        if streamer.settings.claim_moments is True:
+            self.ws_pool.submit(
+                PubsubTopic("community-moments-channel-v1", streamer=streamer)
+            )
+        if streamer.settings.community_goals is True:
+            self.ws_pool.submit(
+                PubsubTopic("community-points-channel-v1", streamer=streamer)
+            )
+
+    def _init_streamer(self, streamer: Streamer):
+        streamer.channel_id = self.twitch.get_channel_id(streamer.username)
+        streamer.settings = set_default_settings(
+            streamer.settings, Settings.streamer_settings
+        )
+        streamer.settings.bet = set_default_settings(
+            streamer.settings.bet, Settings.streamer_settings.bet
+        )
+        if streamer.settings.chat != ChatPresence.NEVER:
+            streamer.irc_chat = ThreadChat(
+                self.username,
+                self.twitch.twitch_login.get_auth_token(),
+                streamer.username,
+            )
+        self.twitch.load_channel_points_context(streamer)
+        self.twitch.check_streamer_online(streamer)
+
+    def _persist_streamers(self):
+        if not self.config_path:
+            return True
+        from TwitchChannelPointsMiner.config import update_streamers_list
+
+        try:
+            update_streamers_list(
+                self.config_path, [s.username for s in self.streamers]
+            )
+            return True
+        except OSError as exc:
+            logger.warning(
+                "Could not write streamers to config (%s). "
+                "Changes apply for this session only; edit config.yaml manually to persist.",
+                exc,
+            )
+            return False
+
+    def get_status_snapshot(self) -> dict:
+        with self._control_lock:
+            uptime_seconds = 0
+            if self.start_datetime is not None:
+                uptime_seconds = int(
+                    (datetime.now() - self.start_datetime).total_seconds()
+                )
+
+            session_points_gained = 0
+            streamers_dto = []
+            for index, streamer in enumerate(self.streamers):
+                baseline = (
+                    self.original_streamers[index]
+                    if index < len(self.original_streamers)
+                    else streamer.channel_points
+                )
+                session_gained = streamer.channel_points - baseline
+                session_points_gained += session_gained
+
+                game = ""
+                if streamer.stream.game not in [{}, None]:
+                    game = (
+                        streamer.stream.game.get("displayName")
+                        or streamer.stream.game.get("name")
+                        or ""
+                    )
+
+                streamers_dto.append(
+                    {
+                        "username": streamer.username,
+                        "online": streamer.is_online,
+                        "points": streamer.channel_points,
+                        "session_gained": session_gained,
+                        "title": streamer.stream.title or "",
+                        "game": game,
+                        "drops_active": bool(streamer.stream.campaigns)
+                        or streamer.stream.drops_tags,
+                        "watch_streak": streamer.is_online
+                        and not streamer.stream.watch_streak_missing,
+                    }
+                )
+
+            predictions = []
+            for event in self.events_predictions.values():
+                predictions.append(
+                    {
+                        "streamer": event.streamer.username,
+                        "title": event.title,
+                        "status": event.status,
+                        "bet_placed": event.bet_placed,
+                    }
+                )
+
+            ws_connected = (
+                self.ws_pool is not None
+                and not getattr(self.ws_pool, "force_close", False)
+            )
+
+            return {
+                "running": self.running,
+                "username": self.username,
+                "session_id": self.session_id,
+                "uptime_seconds": uptime_seconds,
+                "session_points_gained": session_points_gained,
+                "ws_connected": ws_connected,
+                "streamers": streamers_dto,
+                "predictions": predictions,
+            }
+
+    def add_streamer(self, username: str) -> bool:
+        username = username.lower().strip()
+        if not username:
+            raise ValueError("Username is required")
+
+        with self._control_lock:
+            if any(s.username == username for s in self.streamers):
+                raise ValueError(f"Streamer {username} is already in the list")
+
+            streamer = Streamer(username)
+            try:
+                self._init_streamer(streamer)
+            except StreamerDoesNotExistException:
+                raise ValueError(f"Streamer {username} does not exist") from None
+            self.streamers.append(streamer)
+            self.original_streamers.append(streamer.channel_points)
+            self._subscribe_streamer_topics(streamer)
+            persisted = self._persist_streamers()
+            logger.info(
+                f"Added streamer {username} via Web UI",
+                extra={"emoji": ":heavy_plus_sign:"},
+            )
+            return persisted
+
+    def remove_streamer(self, username: str) -> bool:
+        username = username.lower().strip()
+        with self._control_lock:
+            index = next(
+                (i for i, s in enumerate(self.streamers) if s.username == username),
+                None,
+            )
+            if index is None:
+                raise ValueError(f"Streamer {username} not found")
+
+            streamer = self.streamers[index]
+            if (
+                streamer.irc_chat is not None
+                and streamer.settings.chat != ChatPresence.NEVER
+            ):
+                streamer.leave_chat()
+                if streamer.irc_chat.is_alive() is True:
+                    streamer.irc_chat.join()
+
+            del self.streamers[index]
+            if index < len(self.original_streamers):
+                del self.original_streamers[index]
+            persisted = self._persist_streamers()
+            logger.info(
+                f"Removed streamer {username} via Web UI",
+                extra={"emoji": ":heavy_minus_sign:"},
+            )
+            return persisted
+
+    def request_shutdown(self):
+        threading.Thread(
+            target=self._shutdown,
+            kwargs={"exit_process": True, "from_signal": False},
+            daemon=True,
+            name="Web shutdown",
+        ).start()
+
     def end(self, signum, frame):
         if not self.running:
             return
+        self._shutdown(exit_process=True, from_signal=True)
 
-        logger.info("CTRL+C Detected! Please wait just a moment!")
+    def _shutdown(self, exit_process=True, from_signal=True):
+        if not self.running:
+            return
+
+        if from_signal:
+            logger.info("CTRL+C Detected! Please wait just a moment!")
+        else:
+            logger.info("Shutdown requested from Web UI. Please wait just a moment!")
 
         for streamer in self.streamers:
             if streamer.irc_chat is not None and streamer.settings.chat != ChatPresence.NEVER:
@@ -436,7 +628,8 @@ class TwitchChannelPointsMiner:
         # Stop the queue listener to make sure all messages have been logged
         self.queue_listener.stop()
 
-        sys.exit(0)
+        if exit_process:
+            sys.exit(0)
 
     def __print_report(self):
         print("\n")

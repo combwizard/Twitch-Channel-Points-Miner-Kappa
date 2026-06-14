@@ -1,3 +1,12 @@
+# Build the Web UI
+FROM node:20-alpine AS web-build
+WORKDIR /web
+COPY web/package.json ./
+RUN npm install
+COPY web/ ./
+RUN npm run build
+
+# Python runtime
 FROM python:3.12-bullseye
 
 ARG BUILDX_QEMU_ENV
@@ -22,7 +31,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -qq -y --fix-missing --no-ins
     libblas-dev \
     liblapack-dev \
     make \
-    cmake \    
+    cmake \
     automake \
     ninja-build \
     g++ \
@@ -44,6 +53,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -qq -y --fix-missing --no-ins
   && rm -rf /usr/share/doc/*
 
 ADD ./TwitchChannelPointsMiner ./TwitchChannelPointsMiner
-COPY ./assets ./assets
+COPY --from=web-build /assets/dist ./assets/dist
 RUN mkdir -p analytics cookies logs
 ENTRYPOINT [ "python", "-m", "TwitchChannelPointsMiner" ]

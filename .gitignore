@@ -157,6 +157,10 @@ analytics/
 .cursor/
 .idea/
 
+# Frontend
+web/node_modules/
+web/tsconfig.tsbuildinfo
+
 # Replit
 keep_replit_alive.py
 .replit
