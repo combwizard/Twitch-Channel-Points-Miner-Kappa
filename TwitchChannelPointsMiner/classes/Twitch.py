@@ -409,13 +409,58 @@ class Twitch(object):
                 def remaining_watch_amount():
                     return max_watch_amount - len(streamers_watching)
 
+                def streamer_needs_streak(index):
+                    streamer = streamers[index]
+                    return (
+                        streamer.settings.watch_streak is True
+                        and streamer.stream.watch_streak_missing is True
+                        and (
+                            streamer.offline_at == 0
+                            or ((time.time() - streamer.offline_at) // 60) > 30
+                        )
+                        and streamer.stream.minute_watched < 7
+                    )
+
+                def fill_watching_slots(candidates, limit):
+                    """Fill watch slots; prefer streamers that still need streak progress."""
+                    if limit <= 0:
+                        return
+                    available = [i for i in candidates if i not in streamers_watching]
+                    needing = [i for i in available if streamer_needs_streak(i)]
+                    other = [i for i in available if i not in needing]
+                    for index in (needing + other)[:limit]:
+                        streamers_watching.add(index)
+
+                def rebalance_streak_slots():
+                    # Fix #806: reuse slots held by streamers no longer needing streak
+                    pending = [
+                        i
+                        for i in streamers_index
+                        if streamer_needs_streak(i) and i not in streamers_watching
+                    ]
+                    while pending and len(streamers_watching) < max_watch_amount:
+                        streamers_watching.add(pending.pop(0))
+
+                    finished = [
+                        i for i in streamers_watching if not streamer_needs_streak(i)
+                    ]
+                    finished.sort(
+                        key=lambda i: streamers_index.index(i)
+                        if i in streamers_index
+                        else len(streamers_index)
+                    )
+                    while pending and finished:
+                        streamers_watching.discard(finished.pop(0))
+                        streamers_watching.add(pending.pop(0))
+
                 for prior in priority:
                     if remaining_watch_amount() <= 0:
                         break
 
                     if prior == Priority.ORDER:
-                        # Get the first 2 items, they are already in order
-                        streamers_watching.update(streamers_index[:remaining_watch_amount()])
+                        fill_watching_slots(
+                            streamers_index, remaining_watch_amount()
+                        )
 
                     elif prior in [Priority.POINTS_ASCENDING, Priority.POINTS_DESCENDING]:
                         items = [
@@ -432,7 +477,10 @@ class Twitch(object):
                                 True if prior == Priority.POINTS_DESCENDING else False
                             ),
                         )
-                        streamers_watching.update([item["index"] for item in items][:remaining_watch_amount()])
+                        fill_watching_slots(
+                            [item["index"] for item in items],
+                            remaining_watch_amount(),
+                        )
 
                     elif prior == Priority.STREAK:
                         """
@@ -441,32 +489,22 @@ class Twitch(object):
                         Each stream must be at least 10 minutes long and it must have been at least 30 minutes since the last stream ended.
                         Watch at least 6m for get the +10
                         """
-                        for index in streamers_index:
-                            if (
-                                streamers[index].settings.watch_streak is True
-                                and streamers[index].stream.watch_streak_missing is True
-                                and (
-                                    streamers[index].offline_at == 0
-                                    or (
-                                        (time.time() -
-                                         streamers[index].offline_at)
-                                        // 60
-                                    )
-                                    > 30
-                                )
-                                # fix #425
-                                and streamers[index].stream.minute_watched < 7
-                            ):
-                                streamers_watching.add(index)
-                                if remaining_watch_amount() <= 0:
-                                    break
+                        streak_candidates = [
+                            i for i in streamers_index if streamer_needs_streak(i)
+                        ]
+                        fill_watching_slots(
+                            streak_candidates, remaining_watch_amount()
+                        )
 
                     elif prior == Priority.DROPS:
-                        for index in streamers_index:
-                            if streamers[index].drops_condition() is True:
-                                streamers_watching.add(index)
-                                if remaining_watch_amount() <= 0:
-                                    break
+                        drop_candidates = [
+                            i
+                            for i in streamers_index
+                            if streamers[i].drops_condition() is True
+                        ]
+                        fill_watching_slots(
+                            drop_candidates, remaining_watch_amount()
+                        )
 
                     elif prior == Priority.SUBSCRIBED:
                         streamers_with_multiplier = [
@@ -480,7 +518,11 @@ class Twitch(object):
                             ),
                             reverse=True,
                         )
-                        streamers_watching.update(streamers_with_multiplier[:remaining_watch_amount()])
+                        fill_watching_slots(
+                            streamers_with_multiplier, remaining_watch_amount()
+                        )
+
+                rebalance_streak_slots()
 
                 streamers_watching = list(streamers_watching)[:max_watch_amount]
 
