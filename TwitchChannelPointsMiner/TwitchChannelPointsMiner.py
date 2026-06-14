@@ -72,6 +72,8 @@ class TwitchChannelPointsMiner:
         "original_streamers",
         "logs_file",
         "queue_listener",
+        "config_path",
+        "_control_lock",
     ]
 
     def __init__(
@@ -93,7 +95,7 @@ class TwitchChannelPointsMiner:
     ):
         # Fixes TypeError: 'NoneType' object is not subscriptable
         if not username or username == "your-twitch-username":
-            logger.error("Please edit your runner file (usually run.py) and try again.")
+            logger.error("Please set username in config.yaml and try again.")
             logger.error("No username, exiting...")
             sys.exit(0)
 
@@ -164,13 +166,16 @@ class TwitchChannelPointsMiner:
             self.username, logger_settings
         )
 
+        self.config_path = None
+        self._control_lock = threading.RLock()
+
         # Check for the latest version of the script
         current_version, github_version = check_versions()
 
         logger.info(
-            f"Twitch Channel Points Miner v2-{current_version} (fork by rdavydov)"
+            f"Twitch Channel Points Miner v2-{current_version}"
         )
-        logger.info("https://github.com/rdavydov/Twitch-Channel-Points-Miner-v2")
+        logger.info("https://github.com/combwizard/Twitch-Channel-Points-Miner-v2")
 
         if github_version == "0.0.0":
             logger.error(
@@ -187,23 +192,25 @@ class TwitchChannelPointsMiner:
         self,
         host: str = "127.0.0.1",
         port: int = 5000,
-        refresh: int = 5,
         days_ago: int = 7,
+        config_path: str = None,
+        refresh_seconds: int = 5,
     ):
-        # Analytics switch
         if Settings.enable_analytics is True:
-            from TwitchChannelPointsMiner.classes.AnalyticsServer import AnalyticsServer
+            from TwitchChannelPointsMiner.classes.WebServer import WebServer
 
             days_ago = days_ago if days_ago <= 365 * 15 else 365 * 15
-            http_server = AnalyticsServer(
+            http_server = WebServer(
+                miner=self,
+                config_path=config_path or self.config_path,
                 host=host,
                 port=port,
-                refresh=refresh,
+                refresh_seconds=refresh_seconds,
                 days_ago=days_ago,
                 username=self.username,
             )
             http_server.daemon = True
-            http_server.name = "Analytics Thread"
+            http_server.name = "Web UI Thread"
             http_server.start()
         else:
             logger.error("Can't start analytics(), please set enable_analytics=True")
@@ -381,27 +388,7 @@ class TwitchChannelPointsMiner:
                 )
 
             for streamer in self.streamers:
-                self.ws_pool.submit(
-                    PubsubTopic("video-playback-by-id", streamer=streamer)
-                )
-
-                if streamer.settings.follow_raid is True:
-                    self.ws_pool.submit(PubsubTopic("raid", streamer=streamer))
-
-                if streamer.settings.make_predictions is True:
-                    self.ws_pool.submit(
-                        PubsubTopic("predictions-channel-v1", streamer=streamer)
-                    )
-
-                if streamer.settings.claim_moments is True:
-                    self.ws_pool.submit(
-                        PubsubTopic("community-moments-channel-v1", streamer=streamer)
-                    )
-
-                if streamer.settings.community_goals is True:
-                    self.ws_pool.submit(
-                        PubsubTopic("community-points-channel-v1", streamer=streamer)
-                    )
+                self._subscribe_streamer_topics(streamer)
 
             refresh_context = time.time()
             while self.running:

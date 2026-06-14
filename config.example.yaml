@@ -1,0 +1,139 @@
+# Twitch Channel Points Miner — configuration
+#
+# Setup:
+#   cp config.example.yaml config.yaml
+#   Edit config.yaml (config.yaml is gitignored; never commit it)
+#
+# Run:
+#   python -m TwitchChannelPointsMiner
+#
+# Custom path:
+#   CONFIG_PATH=/path/to/config.yaml python -m TwitchChannelPointsMiner
+#
+# Docker (~/apps/twitch-miner):
+#   Mount config.yaml and set CONFIG_PATH=/config/config.yaml
+#   Edit config → docker compose restart miner
+#   Code changes → docker compose build && docker compose up -d
+#
+# Login is stored in cookies/<username>.json after the first TV login.
+# Delete that file and restart if you see ERR_BADAUTH in the logs.
+#
+# Advanced options not available here (bet strategies, Telegram, Discord, etc.)
+# are still configured in example.py as Python code.
+
+# Twitch account login name (required).
+username: your-twitch-username
+
+# Optional account password. If omitted, the miner uses Twitch TV device login
+# when no cookie file exists yet.
+# password: your-password
+
+miner:
+  # Use the Hermes WebSocket API (required since Twitch shut down PubSub in 2025).
+  use_hermes: true
+
+  # Claim all pending drops from your Twitch inventory when the miner starts.
+  claim_drops_startup: false
+
+  # Collect point history for the analytics dashboard (uses more memory and disk).
+  # You can also set analytics.enabled below; that implies enable_analytics.
+  enable_analytics: false
+
+  # Only enable if you hit SSL certificate verification errors.
+  disable_ssl_cert_verification: false
+
+  # Match chat mentions without a leading @ in your nickname.
+  disable_at_in_nickname: false
+
+  # Which streamers to watch when several are live at once.
+  # Twitch allows watching two channels at a time; this list sets the order.
+  #
+  # Values (case-insensitive):
+  #   streak            — watch-streak bonuses first
+  #   drops             — drop campaigns first
+  #   order             — order of the streamers list below
+  #   subscribed        — higher subscription tier first
+  #   points_ascending  — fewest channel points first
+  #   points_descending — most channel points first
+  priority:
+    - streak
+    - drops
+    - order
+
+# Optional analytics web dashboard (Flask). Requires data collection above.
+# Open http://127.0.0.1:5000/ locally, or map port 5000 in Docker.
+analytics:
+  # Start the dashboard (implies miner.enable_analytics)
+  enabled: false
+  # 127.0.0.1 for local-only; 0.0.0.0 inside Docker to reach from the host
+  host: 127.0.0.1
+  port: 5000
+  # Chart refresh interval in minutes
+  refresh: 5
+  # How many days of history to show (max 5475)
+  days_ago: 7
+
+logger:
+  # Write logs to logs/<username>.log
+  save: true
+
+  # Rotate log files daily; keep 7 days
+  auto_clear: true
+
+  # Console and file verbosity: DEBUG, INFO, WARNING, ERROR
+  console_level: INFO
+  file_level: DEBUG
+
+  # Prefix each console line with the username (useful for multiple accounts)
+  console_username: false
+
+  # Time zone for log timestamps (tz database name, e.g. America/Denver)
+  time_zone: ""
+
+  # Emoji in log output (set false on Windows if the terminal garbles them)
+  emoji: true
+
+  # Shorter console output
+  less: false
+
+  # Colored console output
+  colored: true
+
+# Default settings applied to every streamer unless overridden in example.py
+streamer_settings:
+  # Place prediction bets (requires bet settings in example.py for strategy details)
+  make_predictions: true
+
+  # Follow raids to earn raid bonus points
+  follow_raid: true
+
+  # Track drop campaign progress while watching
+  claim_drops: true
+
+  # Claim Twitch Moments when they appear
+  claim_moments: true
+
+  # Prioritize channels where a watch-streak bonus is available
+  watch_streak: true
+
+  # Contribute channel points to community challenge goals
+  community_goals: false
+
+  # IRC chat presence for watch time and @mention detection
+  # Values: always, never, online, offline
+  chat: online
+
+# Channel login names to mine (order matters when priority includes "order")
+streamers:
+  - streamer1
+  - streamer2
+
+mine:
+  # Load your follow list from Twitch instead of using streamers above
+  followers: false
+
+  # When followers is true: asc (oldest follows first) or desc
+  followers_order: asc
+
+  # Usernames to skip when mining (also applies to the followers list)
+  blacklist: []

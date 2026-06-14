@@ -75,6 +75,11 @@ def filter_datas(start_date, end_date, datas):
         new_end_date = start_date
         new_start_date = 0
         df = pd.DataFrame(original_series)
+        if df.empty:
+            datas["series"] = []
+            datas["annotations"] = datas.get("annotations", [])
+            return datas
+
         df["datetime"] = pd.to_datetime(df.x // 1000, unit="s")
 
         # Attempt to get the last known balance from before the provided timeframe
@@ -183,11 +188,12 @@ def json_all():
     )
 
 
-def index(refresh=5, days_ago=7):
+def index(refresh=5, days_ago=7, username=None):
     return render_template(
         "charts.html",
         refresh=(refresh * 60 * 1000),
         daysAgo=days_ago,
+        username=username or "",
     )
 
 
@@ -221,7 +227,6 @@ def download_assets(assets_folder, required_files):
 
 def check_assets():
     required_files = [
-        "banner.png",
         "charts.html",
         "script.js",
         "style.css",
@@ -289,7 +294,7 @@ class AnalyticsServer(Thread):
             "/",
             "index",
             index,
-            defaults={"refresh": refresh, "days_ago": days_ago},
+            defaults={"refresh": refresh, "days_ago": days_ago, "username": username},
             methods=["GET"],
         )
         self.app.add_url_rule("/streamers", "streamers",

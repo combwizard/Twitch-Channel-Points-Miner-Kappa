@@ -137,19 +137,25 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-# PyCharm
-.idea/
-
-# Custom files
+# Local configuration and secrets (never commit)
 run.py
+config.yaml
+config.*.yaml
+!config.example.yaml
+
+# Browser automation
 chromedriver*
 
-# Folders
-cookies/*
-logs/*
-screenshots/*
-htmls/*
-analytics/*
+# Runtime data
+cookies/
+logs/
+screenshots/
+htmls/
+analytics/
+
+# IDE / editor
+.cursor/
+.idea/
 
 # Replit
 keep_replit_alive.py

@@ -29,13 +29,24 @@ cd Twitch-Channel-Points-Miner-v2
 python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-cp example.py run.py        # edit run.py with your username and streamers
-python run.py
+cp config.example.yaml config.yaml   # edit username and streamers
+python -m TwitchChannelPointsMiner
 ```
 
 On first run you will be prompted to log in unless a cookie file already exists in `cookies/`.
 
 ### Minimal configuration
+
+Copy [`config.example.yaml`](config.example.yaml) to `config.yaml` and set your username and streamers:
+
+```yaml
+username: your-twitch-username
+streamers:
+  - streamer1
+  - streamer2
+```
+
+Advanced options (bet strategies, notifications, per-streamer overrides) are still configured in Python via [`example.py`](example.py). You can also use the programmatic API directly:
 
 ```python
 from TwitchChannelPointsMiner import TwitchChannelPointsMiner
@@ -44,7 +55,7 @@ miner = TwitchChannelPointsMiner("your-twitch-username")
 miner.mine(["streamer1", "streamer2"])
 ```
 
-For the full set of options (priorities, per-streamer settings, bet strategies, and notifications), see [`example.py`](example.py).
+See [`config.example.yaml`](config.example.yaml) for all YAML options (Hermes, priorities, logger, analytics, streamer defaults).
 
 ## How it works
 
@@ -56,7 +67,9 @@ Streamer priority is controlled by the `priority` setting and the order of your 
 
 ## Configuration reference
 
-Settings resolve in this order (highest wins):
+Settings can be defined in `config.yaml` (recommended) or in Python when constructing `TwitchChannelPointsMiner`. YAML covers username, streamers, miner options, logger, analytics, and default streamer settings. Bet strategies, notifications, and per-streamer Python objects remain in [`example.py`](example.py).
+
+When using both, Python API settings resolve in this order (highest wins):
 
 1. Per-streamer settings passed to `mine()`
 2. `StreamerSettings` on the `TwitchChannelPointsMiner` instance
@@ -143,7 +156,20 @@ Combine priorities as needed. Include at least one of `ORDER`, `POINTS_ASCENDING
 
 ## Analytics
 
-Enable data collection with `enable_analytics=True`, then start the web UI before mining:
+Enable the dashboard in `config.yaml`:
+
+```yaml
+analytics:
+  enabled: true
+  host: 127.0.0.1   # use 0.0.0.0 in Docker to reach from the host
+  port: 5000
+  refresh: 5
+  days_ago: 7
+```
+
+Setting `analytics.enabled: true` also turns on data collection (`miner.enable_analytics`). Open `http://127.0.0.1:5000` while the miner is running.
+
+Alternatively, enable collection and start the server from Python:
 
 ```python
 miner = TwitchChannelPointsMiner("your-twitch-username", enable_analytics=True)
@@ -151,13 +177,11 @@ miner.analytics(host="127.0.0.1", port=5000, refresh=5, days_ago=7)
 miner.mine(["streamer1", "streamer2"])
 ```
 
-Open `http://127.0.0.1:5000`. Use `host="0.0.0.0"` to reach the dashboard from another machine on your network.
-
 When analytics is disabled (default), memory and disk use are lower and no `analytics/*.json` files are written.
 
 ## Docker
 
-Official images: [rdavidoff/twitch-channel-points-miner-v2](https://hub.docker.com/r/rdavidoff/twitch-channel-points-miner-v2) (`linux/amd64`, `linux/arm64`, `linux/arm/v7`).
+Build from this repository or use a published image when available: `combwizard/twitch-channel-points-miner-v2`.
 
 Mount your config and persistent data:
 
@@ -165,23 +189,28 @@ Mount your config and persistent data:
 # docker-compose.yml
 services:
   miner:
-    image: rdavidoff/twitch-channel-points-miner-v2
+    image: combwizard/twitch-channel-points-miner-v2
     stdin_open: true
     tty: true
     environment:
       - TERM=xterm-256color
+      - CONFIG_PATH=/config/config.yaml
     volumes:
+      - ./config.yaml:/config/config.yaml:ro
       - ./analytics:/usr/src/app/analytics
       - ./cookies:/usr/src/app/cookies
       - ./logs:/usr/src/app/logs
-      - ./run.py:/usr/src/app/run.py:ro
     ports:
       - "5000:5000"
 ```
 
-`run.py` must be mounted as a volume. Use `-it` for the first login when no cookie file exists yet. On Windows, use absolute paths instead of `$(pwd)`.
+Use `-it` for the first login when no cookie file exists yet. On Windows, use absolute paths instead of `$(pwd)`.
 
-For Portainer deployment, see the [upstream wiki guide](https://github.com/rdavydov/Twitch-Channel-Points-Miner-v2/wiki/Deploy-Docker-container-in-Portainer).
+To build locally:
+
+```sh
+docker build -t combwizard/twitch-channel-points-miner-v2 .
+```
 
 ## Session cookies
 
@@ -189,7 +218,7 @@ Login state is stored in `cookies/<username>.json`. Legacy pickle files (`cookie
 
 ```
 .
-├── run.py
+├── config.yaml
 └── cookies/
     └── your-twitch-username.json
 ```
@@ -202,7 +231,7 @@ If you see `ERR_BADAUTH` in the logs, delete the cookie file for that account an
 
 ### Windows
 
-Emoji in logs can cause encoding issues. Set `LoggerSettings(emoji=False)` if terminal output looks wrong. See [upstream Windows notes](https://github.com/Tkd-Alex/Twitch-Channel-Points-Miner-v2/issues/55) for additional tips.
+Emoji in logs can cause encoding issues. Set `logger.emoji: false` in `config.yaml` (or `LoggerSettings(emoji=False)` in Python) if terminal output looks wrong.
 
 ### Termux (Android)
 
@@ -211,9 +240,9 @@ pkg upgrade
 pkg install python git rust libjpeg-turbo libcrypt ndk-sysroot clang zlib binutils tur-repo python-cryptography python-pandas
 git clone https://github.com/combwizard/Twitch-Channel-Points-Miner-v2.git
 cd Twitch-Channel-Points-Miner-v2
-cp example.py run.py && nano run.py
+cp config.example.yaml config.yaml && nano config.yaml
 pip install -r requirements.txt
-python run.py
+python -m TwitchChannelPointsMiner
 ```
 
 If `cryptography` fails to build:

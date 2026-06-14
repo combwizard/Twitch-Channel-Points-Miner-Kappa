@@ -75,7 +75,7 @@ var options = {
         }
     },
     noData: {
-        text: 'Loading...'
+        text: 'No data yet'
     }
 };
 
@@ -130,40 +130,15 @@ $(document).ready(function () {
         }
     }
 
-    // Retrieve the saved header visibility preference from localStorage
-    var headerVisibility = localStorage.getItem('headerVisibility');
-
-    // Set the initial header visibility based on the saved preference or default to 'visible'
-    if (headerVisibility === 'hidden') {
-        $('#toggle-header').prop('checked', false);
-        $('#header').hide();
-    } else {
-        $('#toggle-header').prop('checked', true);
-        $('#header').show();
-    }
-
-    // Handle the toggle header change event
-    $('#toggle-header').change(function () {
-        if (this.checked) {
-            $('#header').show();
-            // Save the header visibility preference as 'visible' in localStorage
-            localStorage.setItem('headerVisibility', 'visible');
-        } else {
-            $('#header').hide();
-            // Save the header visibility preference as 'hidden' in localStorage
-            localStorage.setItem('headerVisibility', 'hidden');
-        }
-    });
+    // Restore settings from localStorage on page load
+    $('#annotations').prop("checked", localStorage.getItem("annotations") === "true");
+    $('#dark-mode').prop("checked", localStorage.getItem("dark-mode") === "true");
 
     chart.render();
 
     if (!localStorage.getItem("annotations")) localStorage.setItem("annotations", true);
     if (!localStorage.getItem("dark-mode")) localStorage.setItem("dark-mode", true);
     if (!localStorage.getItem("sort-by")) localStorage.setItem("sort-by", "Name ascending");
-
-    // Restore settings from localStorage on page load
-    $('#annotations').prop("checked", localStorage.getItem("annotations") === "true");
-    $('#dark-mode').prop("checked", localStorage.getItem("dark-mode") === "true");
 
     // Handle the annotation toggle click event
     $('#annotations').click(() => {
@@ -250,6 +225,9 @@ function changeStreamer(streamer, index) {
 }
 
 function getStreamerData(streamer) {
+    if (!streamer) {
+        return;
+    }
     if (currentStreamer == streamer) {
         $.getJSON(`./json/${streamer}`, {
             startDate: formatDate(startDate),
@@ -265,6 +243,10 @@ function getStreamerData(streamer) {
             setTimeout(function () {
                 getStreamerData(streamer);
             }, 300000); // 5 minutes
+        }).fail(function () {
+            setTimeout(function () {
+                getStreamerData(streamer);
+            }, 30000);
         });
     }
 }
@@ -285,6 +267,22 @@ function getStreamers() {
         streamersList = response;
         sortStreamers();
 
+        if (streamersList.length === 0) {
+            chart.updateOptions({
+                noData: {
+                    text: 'No data yet. Waiting for streamers to come online.'
+                }
+            });
+            setTimeout(getStreamers, 30000);
+            return;
+        }
+
+        chart.updateOptions({
+            noData: {
+                text: 'Loading...'
+            }
+        });
+
         // Restore the selected streamer from localStorage on page load
         var selectedStreamer = localStorage.getItem("selectedStreamer");
 
@@ -297,11 +295,16 @@ function getStreamers() {
 
         // Ensure the selected streamer is still active and scrolled into view
         renderStreamers();
+    }).fail(function () {
+        setTimeout(getStreamers, 30000);
     });
 }
 
 function renderStreamers() {
     $("#streamers-list").empty();
+    if (streamersList.length === 0) {
+        return;
+    }
     var promised = new Promise((resolve, reject) => {
         streamersList.forEach((streamer, index, array) => {
             displayname = streamer.name.replace(".json", "");
@@ -326,7 +329,12 @@ function renderStreamers() {
         });
     });
     promised.then(() => {
-        changeStreamer(currentStreamer, streamersList.findIndex(streamer => streamer.name === currentStreamer) + 1);
+        if (currentStreamer) {
+            changeStreamer(
+                currentStreamer,
+                streamersList.findIndex(streamer => streamer.name === currentStreamer) + 1
+            );
+        }
     });
 }
 

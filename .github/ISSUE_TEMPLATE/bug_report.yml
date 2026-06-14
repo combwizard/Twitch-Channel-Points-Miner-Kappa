@@ -40,7 +40,7 @@ body:
     id: python-version
     attributes:
       label: Python version
-      placeholder: "3.11.1"
+      placeholder: "3.12"
     validations:
       required: true
   - type: input
@@ -60,15 +60,15 @@ body:
       label: Logs
       description: |
         How to provide a DEBUG log:
-        1. Set this in your runner script (`run.py`):
-        ```py
-        logger_settings=LoggerSettings(
-          save=True,
-          console_level=logging.INFO,
-          file_level=logging.DEBUG,
-          less=True,
+        1. Set this in `config.yaml`:
+        ```yaml
+        logger:
+          save: true
+          console_level: INFO
+          file_level: DEBUG
+          less: true
         ```
-        2. Start the miner, wait for the error, then stop the miner and post the contents of the log file (`logs\username.log`) to https://gist.github.com/ and post a link here.
+        2. Start the miner, wait for the error, then stop the miner and post the contents of the log file (`logs/username.log`) to https://gist.github.com/ and post a link here.
         3. Create another gist with your console output, just in case. Paste a link here as well.
     validations:
       required: true

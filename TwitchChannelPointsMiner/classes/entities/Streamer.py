@@ -155,6 +155,9 @@ class Streamer(object):
             },
         )
 
+        if Settings.enable_analytics is True:
+            self.persistent_series(event_type="Online")
+
     def print_history(self):
         return "; ".join(
             [

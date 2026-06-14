@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+#
+# For YAML-based configuration, see config.example.yaml and run:
+#   python -m TwitchChannelPointsMiner
 
 import logging
 from colorama import Fore

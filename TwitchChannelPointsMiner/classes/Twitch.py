@@ -55,6 +55,7 @@ JsonType = Dict[str, Any]
 class Twitch(object):
     __slots__ = [
         "cookies_file",
+        "cookies_file_legacy",
         "user_agent",
         "twitch_login",
         "running",

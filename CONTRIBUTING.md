@@ -4,7 +4,7 @@
 
 Before you begin:
 - Have you read the [code of conduct](CODE_OF_CONDUCT.md)?
-- Check out the [existing issues](https://github.com/Tkd-Alex/Twitch-Channel-Points-Miner-v2/issues) & see if there is already an opened issue.
+- Check out the [existing issues](https://github.com/combwizard/Twitch-Channel-Points-Miner-v2/issues) and see if one is already open.
 
 ### Ready to make a change? Fork the repo
 
@@ -32,7 +32,7 @@ When you're done making changes, and you'd like to propose them for review, use 
 ### Your PR is merged!
 Congratulations! The whole GitHub community thanks you. :sparkles:
 
-Once your PR is merged, you will be proudly listed as a contributor in the [contributor chart](https://github.com/Tkd-Alex/Twitch-Channel-Points-Miner-v2/graphs/contributors).
+Once your PR is merged, you will be listed as a contributor in the [contributor chart](https://github.com/combwizard/Twitch-Channel-Points-Miner-v2/graphs/contributors).
 
 ### Keep contributing as you use GitHub Docs
 
@@ -98,9 +98,10 @@ When you open a pull request, you must fill out the "Ready for review" template 
 
 ### Python Styleguide
 All Python code is formatted with [Black](https://github.com/psf/black) using the default settings. Your code will not be accepted if it is not blackened.
-You can use the pre-commit hook.
-```
-pip install pre-commit
+You can use the pre-commit hook:
+
+```sh
+pip install -r requirements-dev.txt
 pre-commit install
 ```
 
