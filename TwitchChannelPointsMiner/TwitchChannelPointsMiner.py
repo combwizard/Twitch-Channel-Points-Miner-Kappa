@@ -173,9 +173,9 @@ class TwitchChannelPointsMiner:
         current_version, github_version = check_versions()
 
         logger.info(
-            f"Twitch Channel Points Miner v2-{current_version}"
+            f"Twitch Channel Points Miner Kappa-{current_version}"
         )
-        logger.info("https://github.com/combwizard/Twitch-Channel-Points-Miner-v2")
+        logger.info("https://github.com/combwizard/Twitch-Channel-Points-Miner-Kappa")
 
         if github_version == "0.0.0":
             logger.error(

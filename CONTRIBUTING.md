@@ -4,7 +4,7 @@ This is a personal fork. I maintain it for my own use, but **issues are welcome*
 
 ## Issues
 
-Use [GitHub Issues](https://github.com/combwizard/Twitch-Channel-Points-Miner-v2/issues) and pick a template when you can:
+Use [GitHub Issues](https://github.com/combwizard/Twitch-Channel-Points-Miner-Kappa/issues) and pick a template when you can:
 
 - **Bug report:** steps to reproduce, environment (OS, Python, Docker or not), miner version, relevant log output
 - **Feature request:** what you want and why (I may not implement everything)

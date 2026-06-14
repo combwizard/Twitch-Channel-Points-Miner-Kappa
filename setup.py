@@ -15,14 +15,14 @@ metadata = dict(
 )
 
 setuptools.setup(
-    name="Twitch-Channel-Points-Miner-v2",
+    name="Twitch-Channel-Points-Miner-Kappa",
     version=metadata["version"],
     author="Tkd-Alex (Alessandro Maggio) and rdavydov (Roman Davydov)",
     author_email="alex.tkd.alex@gmail.com",
     description="A simple script that will watch a stream for you and earn the channel points.",
     license="GPLv3+",
     keywords="python bot streaming script miner twtich channel-points",
-    url="https://github.com/combwizard/Twitch-Channel-Points-Miner-v2",
+    url="https://github.com/combwizard/Twitch-Channel-Points-Miner-Kappa",
     packages=setuptools.find_packages(),
     include_package_data=True,
     install_requires=[

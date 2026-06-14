@@ -32,7 +32,7 @@ export function Header({ status, connected }: HeaderProps) {
   return (
     <header className="flex flex-col gap-4 border-b border-twitch-border pb-6 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Channel Points Miner</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Channel Points Miner Kappa</h1>
         <p className="mt-1 text-sm text-twitch-muted">
           {status?.username ?? "…"}
           {status && (

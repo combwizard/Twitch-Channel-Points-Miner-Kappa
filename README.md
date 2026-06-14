@@ -1,11 +1,12 @@
-# Twitch Channel Points Miner v2
+# Twitch Channel Points Miner Kappa
 
 A Python bot that watches Twitch streams on your behalf and earns [channel points](https://help.twitch.tv/s/article/channel-points-guide): watch time, bonuses, raids, predictions, drops, and more.
 
-Fork of [rdavydov/Twitch-Channel-Points-Miner-v2](https://github.com/rdavydov/Twitch-Channel-Points-Miner-v2) (continuing [Tkd-Alex/Twitch-Channel-Points-Miner-v2](https://github.com/Tkd-Alex/Twitch-Channel-Points-Miner-v2)).
+**Kappa** is a personal fork in a long-running community project. It builds on the miners listed in [Lineage](#lineage); this repo is maintained independently for my own use.
 
 ## Contents
 
+- [Lineage](#lineage)
 - [Quick start](#quick-start)
 - [Web UI](#web-ui)
 - [Configuration](#configuration)
@@ -18,8 +19,8 @@ Fork of [rdavydov/Twitch-Channel-Points-Miner-v2](https://github.com/rdavydov/Tw
 **Requirements:** Python 3.12+, a Twitch account.
 
 ```sh
-git clone https://github.com/combwizard/Twitch-Channel-Points-Miner-v2.git
-cd Twitch-Channel-Points-Miner-v2
+git clone https://github.com/combwizard/Twitch-Channel-Points-Miner-Kappa.git
+cd Twitch-Channel-Points-Miner-Kappa
 python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
@@ -92,7 +93,7 @@ There is no authentication on the Web UI. Bind to `127.0.0.1` or protect port 50
 ## Docker
 
 ```sh
-docker build -t combwizard/twitch-channel-points-miner-v2 .
+docker build -t combwizard/twitch-channel-points-miner-kappa .
 ```
 
 Example `docker-compose.yml`:
@@ -100,7 +101,7 @@ Example `docker-compose.yml`:
 ```yaml
 services:
   miner:
-    image: combwizard/twitch-channel-points-miner-v2
+    image: combwizard/twitch-channel-points-miner-kappa
     stdin_open: true
     tty: true
     restart: unless-stopped
@@ -132,8 +133,8 @@ Login state is stored in `cookies/<username>.json`. Legacy `.pkl` files are migr
 
 ```sh
 pkg install python git rust libjpeg-turbo libcrypt ndk-sysroot clang zlib binutils tur-repo python-cryptography python-pandas
-git clone https://github.com/combwizard/Twitch-Channel-Points-Miner-v2.git
-cd Twitch-Channel-Points-Miner-v2
+git clone https://github.com/combwizard/Twitch-Channel-Points-Miner-Kappa.git
+cd Twitch-Channel-Points-Miner-Kappa
 cp config.example.yaml config.yaml && nano config.yaml
 pip install -r requirements.txt
 python -m TwitchChannelPointsMiner
@@ -143,15 +144,20 @@ If `cryptography` fails to build, see the [upstream Termux notes](https://github
 
 ## Issues
 
-Found a bug or have an idea? [Open an issue](https://github.com/combwizard/Twitch-Channel-Points-Miner-v2/issues) (templates help with the details). Pull requests are not reviewed; see [CONTRIBUTING.md](CONTRIBUTING.md).
+Found a bug or have an idea? [Open an issue](https://github.com/combwizard/Twitch-Channel-Points-Miner-Kappa/issues) (templates help with the details). Pull requests are not reviewed; see [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Credits
+## Lineage
+
+Thank you to everyone who built and maintained the miners this fork descends from:
 
 | Project | Role |
 | --- | --- |
-| [gottagofaster236/Twitch-Channel-Points-Miner](https://github.com/gottagofaster236/Twitch-Channel-Points-Miner) | Original idea |
-| [Tkd-Alex/Twitch-Channel-Points-Miner-v2](https://github.com/Tkd-Alex/Twitch-Channel-Points-Miner-v2) | v2 architecture |
-| [rdavydov/Twitch-Channel-Points-Miner-v2](https://github.com/rdavydov/Twitch-Channel-Points-Miner-v2) | Active maintenance fork |
+| [gottagofaster236/Twitch-Channel-Points-Miner](https://github.com/gottagofaster236/Twitch-Channel-Points-Miner) | Original channel points miner |
+| [Tkd-Alex/Twitch-Channel-Points-Miner-v2](https://github.com/Tkd-Alex/Twitch-Channel-Points-Miner-v2) | v2 rewrite and architecture |
+| [rdavydov/Twitch-Channel-Points-Miner-v2](https://github.com/rdavydov/Twitch-Channel-Points-Miner-v2) | v2 maintenance and community updates |
+| [combwizard/Twitch-Channel-Points-Miner-Kappa](https://github.com/combwizard/Twitch-Channel-Points-Miner-Kappa) | **This repo:** personal fork (React Web UI, YAML config, Docker, Hermes by default) |
+
+Kappa forked from rdavydov's tree and carries forward the GPLv3+ license from upstream.
 
 ## Disclaimer
 
