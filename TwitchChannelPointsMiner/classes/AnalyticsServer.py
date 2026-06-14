@@ -102,15 +102,31 @@ def filter_datas(start_date, end_date, datas):
     return datas
 
 
+def _analytics_json_path(streamer):
+    """Resolve streamer name to a path under analytics_path, or None if unsafe."""
+    base = os.path.realpath(Settings.analytics_path)
+    stem = streamer[:-5] if streamer.endswith(".json") else streamer
+    if not stem or os.path.basename(stem) != stem:
+        return None
+
+    candidate = os.path.realpath(os.path.join(base, f"{stem}.json"))
+    try:
+        if os.path.commonpath([base, candidate]) != base:
+            return None
+    except ValueError:
+        return None
+
+    if not os.path.isfile(candidate):
+        return None
+    return candidate
+
+
 def read_json(streamer, return_response=True):
     start_date = request.args.get("startDate", type=str)
     end_date = request.args.get("endDate", type=str)
 
-    path = Settings.analytics_path
-    streamer = streamer if streamer.endswith(".json") else f"{streamer}.json"
-
-    # Check if the file exists before attempting to read it
-    if not os.path.exists(os.path.join(path, streamer)):
+    file_path = _analytics_json_path(streamer)
+    if file_path is None:
         error_message = f"File '{streamer}' not found."
         logger.error(error_message)
         if return_response:
@@ -119,10 +135,10 @@ def read_json(streamer, return_response=True):
             return {"error": error_message}
 
     try:
-        with open(os.path.join(path, streamer), 'r') as file:
+        with open(file_path, "r", encoding="utf-8") as file:
             data = json.load(file)
     except json.JSONDecodeError as e:
-        error_message = f"Error decoding JSON in file '{streamer}': {str(e)}"
+        error_message = f"Error decoding JSON in file '{os.path.basename(file_path)}': {str(e)}"
         logger.error(error_message)
         if return_response:
             return Response(json.dumps({"error": error_message}), status=500, mimetype="application/json")

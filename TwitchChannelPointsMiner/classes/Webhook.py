@@ -1,4 +1,5 @@
 from textwrap import dedent
+from urllib.parse import urlencode, urlparse, urlunparse
 
 import requests
 
@@ -16,8 +17,12 @@ class Webhook(object):
     def send(self, message: str, event: Events) -> None:
         
         if str(event) in self.events:
-            url = self.endpoint + f"?event_name={str(event)}&message={message}" 
-            
+            parsed = urlparse(self.endpoint)
+            query = urlencode({"event_name": str(event), "message": message})
+            if parsed.query:
+                query = f"{parsed.query}&{query}"
+            url = urlunparse(parsed._replace(query=query))
+
             if self.method.lower() == "get":
                 requests.get(url=url)
             elif self.method.lower() == "post":

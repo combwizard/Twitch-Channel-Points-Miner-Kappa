@@ -4,6 +4,7 @@
 
 import copy
 # import getpass
+import json
 import logging
 import os
 import pickle
@@ -313,8 +314,19 @@ class TwitchLogin(object):
         # print(f"cookies_dict2pickle: {cookies_dict}")
         for cookie_name, value in cookies_dict.items():
             self.cookies.append({"name": cookie_name, "value": value})
-        # print(f"cookies2pickle: {self.cookies}")
-        pickle.dump(self.cookies, open(cookies_file, "wb"))
+        with open(cookies_file, "w", encoding="utf-8") as f:
+            json.dump(self.cookies, f)
+
+    def _validate_cookies(self):
+        if not isinstance(self.cookies, list):
+            raise WrongCookiesException("Invalid cookies file format")
+        for cookie in self.cookies:
+            if (
+                not isinstance(cookie, dict)
+                or "name" not in cookie
+                or "value" not in cookie
+            ):
+                raise WrongCookiesException("Invalid cookies file format")
 
     def get_cookie_value(self, key):
         for cookie in self.cookies:
@@ -324,10 +336,19 @@ class TwitchLogin(object):
         return None
 
     def load_cookies(self, cookies_file):
-        if os.path.isfile(cookies_file):
-            self.cookies = pickle.load(open(cookies_file, "rb"))
-        else:
+        if not os.path.isfile(cookies_file):
             raise WrongCookiesException("There must be a cookies file!")
+
+        if cookies_file.endswith(".pkl"):
+            logger.warning(
+                "Loading legacy pickle cookie file; it will be migrated to JSON on next save."
+            )
+            with open(cookies_file, "rb") as f:
+                self.cookies = pickle.load(f)
+        else:
+            with open(cookies_file, "r", encoding="utf-8") as f:
+                self.cookies = json.load(f)
+        self._validate_cookies()
 
     def get_user_id(self):
         persistent = self.get_cookie_value("persistent")
